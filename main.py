@@ -4,7 +4,7 @@ from backend.math_calc.equation.quadratic_equation import Quadratic_equation
 from backend.math_calc.func_graph.function import Function
 from backend.math_calc.operation.operation import Operation
 
-tuples_to_solve = [(2,1,-1),(11,-33),(9,3)]
+tuples_to_solve = [(2,1,-1),(11,-33),(9,3),(1,1,1)]
 
 for tup in tuples_to_solve:
     if len(tup) == 2:
@@ -13,6 +13,7 @@ for tup in tuples_to_solve:
     elif len(tup) == 3:
         current_eq = Quadratic_equation(tup)
         print(current_eq.solve())
+        print(type(current_eq.solve()))
 
 
 functions_to_visualize = ["2*x**2 + 3*x + 1",
