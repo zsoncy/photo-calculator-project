@@ -43,24 +43,42 @@ class App(CTk):
 
         new_page = self.pages[page_name]
         width = self.winfo_width()
-        x_start = width if direction == "left" else -width
-        new_page.place(x=x_start, y=0, relheight=1, relwidth=1)
 
-        step = 30
+        if direction == "left":
+            x_new_start = width
+            x_old_start = 0
+        else:
+            x_new_start = -width
+            x_old_start = 0
+
+        new_page.place(x=x_new_start, y=0, relwidth=1, relheight=1)
+        if old_page:
+            old_page.place(x=x_old_start, y=0, relwidth=1, relheight=1)
+
+        step = 45
+        x_new = x_new_start
+        x_old = x_old_start
 
         def animate():
-            nonlocal x_start
+            nonlocal x_new, x_old
+
             if direction == "left":
-                x_start -= step
-                if x_start <= 0:
-                    x_start = 0
+                x_new -= step
+                x_old -= step
+                if x_new <= 0:
+                    x_new = 0
             else:
-                x_start += step
-                if x_start >= 0:
-                    x_start = 0
-            new_page.place(x=x_start, y=0)
-            if x_start != 0:
-                self.after(10, animate)
+                x_new += step
+                x_old += step
+                if x_new >= 0:
+                    x_new = 0
+
+            new_page.place(x=x_new, y=0)
+            if old_page:
+                old_page.place(x=x_old, y=0)
+
+            if x_new != 0:
+                self.after(5, animate)
             else:
                 if old_page:
                     old_page.place_forget()
