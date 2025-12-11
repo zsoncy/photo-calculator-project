@@ -6,6 +6,8 @@ from frontend.pages.eq_pages.select_eq import Select_Eq_Page
 from frontend.pages.main_pages.main_page import Main_Page
 from frontend.pages.main_pages.select_calc import Select_Calc_Page
 from frontend.pages.op_pages.operation import Operation_Page
+from frontend.pages.main_pages.open_image import Open_Image_Page
+
 
 
 class App(CTk):
@@ -26,6 +28,8 @@ class App(CTk):
         self.pages["linear"] = Linear_Eq_Page(self)
         self.pages["quadratic"] = Quadratic_Eq_Page(self)
         self.pages["operation"] = Operation_Page(self)
+        self.pages["open_image"] = Open_Image_Page(self)
+
 
         self.show_page("main")
 

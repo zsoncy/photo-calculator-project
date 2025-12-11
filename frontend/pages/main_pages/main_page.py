@@ -28,7 +28,7 @@ class Main_Page(CTkFrame):
         title_label.grid(row=0, column=0, pady=(100, 40))
 
         button_1 = CTkButton(master=right_frame, text="Open an image", fg_color="#4e1d58", hover_color="#370d40",
-                             text_color="#DDC3C3", font=("Helvetica", 40), corner_radius=50)
+                             text_color="#DDC3C3", font=("Helvetica", 40), corner_radius=50, command=lambda: root.slide_to_page("open_image", direction="left"))
         button_1.grid(row=1, column=0, pady=(50, 0), ipadx=20, ipady=10)
 
         button_2 = CTkButton(master=right_frame, text="Continue with manual input", fg_color="#4e1d58", hover_color="#370d40",
