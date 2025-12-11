@@ -90,6 +90,8 @@ class Open_Image_Page(CTkFrame):
 
             # If you want to share the image with other pages later:
             # root.cv_image = self.cv_image
+            #root.cv_image_bgr = self.cv_image  # BGR (OpenCV)
+            #root.cv_image_rgb = cv2.cvtColor(self.cv_image, cv2.COLOR_BGR2RGB)
 
             # TODO: plug Step 2 pipeline here or navigate to a processing/results page.
 

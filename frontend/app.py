@@ -1,3 +1,4 @@
+
 from customtkinter import *
 
 from frontend.pages.eq_pages.linear_eq import Linear_Eq_Page
@@ -9,7 +10,6 @@ from frontend.pages.op_pages.operation import Operation_Page
 from frontend.pages.main_pages.open_image import Open_Image_Page
 
 
-
 class App(CTk):
     def __init__(self):
         super().__init__(fg_color="#DDC3C3")
@@ -19,9 +19,11 @@ class App(CTk):
         self.geometry("1600x900")
         self.minsize(1550, 850)
         self.iconbitmap("../../LOGO.ico")
+
         self.pages = {}
         self.current_page = None
 
+        # --- Create and register all pages ---
         self.pages["main"] = Main_Page(self)
         self.pages["select_calc"] = Select_Calc_Page(self)
         self.pages["select_eq"] = Select_Eq_Page(self)
@@ -31,7 +33,24 @@ class App(CTk):
         self.pages["open_image"] = Open_Image_Page(self)
 
 
+
+        # --- Windows-only shortcuts (no bind_all; bind on toplevel) ---
+        # Ctrl+O  -> trigger Open Image dialog on the open_image page
+        self.bind("<Control-o>", lambda e: self.pages["open_image"].open_image_dialog())
+        # Esc     -> go back to main page with a right slide
+        self.bind("<Escape>", self._on_escape)
+
+
+        # Show initial page
         self.show_page("main")
+
+
+    def _on_escape(self, _event=None):
+        # Do nothing if we are already on main
+        if self.current_page == "main":
+            return
+        self.slide_to_page("main", direction="right")
+
 
     def show_page(self, page_name):
         if self.current_page:
@@ -88,15 +107,15 @@ class App(CTk):
                     old_page.place_forget()
                 self.current_page = page_name
 
+                # If a page defines an on_show hook (e.g., Processing_Page),
+                # call it after the animation finishes.
+                page_obj = self.pages.get(page_name)
+                if hasattr(page_obj, "on_show"):
+                    page_obj.on_show(self)
+
         animate()
 
 
 if __name__ == '__main__':
     app = App()
     app.mainloop()
-
-
-
-
-
-
