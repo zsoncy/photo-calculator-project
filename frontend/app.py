@@ -1,6 +1,7 @@
 
 from customtkinter import *
 
+from utils.config import load_config, save_config
 from frontend.pages.eq_pages.linear_eq import Linear_Eq_Page
 from frontend.pages.eq_pages.quadratic_eq import Quadratic_Eq_Page
 from frontend.pages.eq_pages.select_eq import Select_Eq_Page
@@ -19,6 +20,8 @@ class App(CTk):
         self.geometry("1600x900")
         self.minsize(1550, 850)
         self.iconbitmap("../../LOGO.ico")
+        cfg = load_config()
+        self.last_dir = cfg.get("last_dir") or os.path.expanduser("~")
 
         self.pages = {}
         self.current_page = None

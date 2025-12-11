@@ -1,3 +1,4 @@
+from utils.config import load_config, save_config
 from customtkinter import *
 from tkinter import filedialog, messagebox
 from PIL import Image
@@ -20,7 +21,9 @@ class Open_Image_Page(CTkFrame):
         self.cv_image = None          # OpenCV image (BGR numpy array)
         self.pil_image = None         # PIL Image (RGB)
         self.ctk_image = None         # CTkImage for display
-        self.last_dir = os.path.expanduser("~")
+        cfg = load_config()
+        self.last_dir = cfg.get("last_dir") or os.path.expanduser("~")
+
 
         # ---- Top bar ----
         top = CTkFrame(self, fg_color="transparent")
@@ -68,11 +71,11 @@ class Open_Image_Page(CTkFrame):
         ]
         path = filedialog.askopenfilename(
             title="Open Image",
-            initialdir=self.last_dir,
+            initialdir=self.last_dir,  # loaded from config in __init__
             filetypes=filetypes
         )
         if not path:
-            return  # user canceled
+            return
 
         try:
             img = self._cv_imread_unicode(path)
@@ -82,18 +85,19 @@ class Open_Image_Page(CTkFrame):
             # Save state
             self.cv_image = img
             self.pil_image = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-            self.last_dir = os.path.dirname(path)
-            self.path_label.configure(text=path)
 
-            # Render preview
+            # Update + persist last_dir so it's remembered next run
+            self.last_dir = os.path.dirname(path)
+            save_config({"last_dir": self.last_dir})
+
+            # UI + preview
+            self.path_label.configure(text=path)
             self._update_preview()
 
-            # If you want to share the image with other pages later:
-            # root.cv_image = self.cv_image
-            #root.cv_image_bgr = self.cv_image  # BGR (OpenCV)
-            #root.cv_image_rgb = cv2.cvtColor(self.cv_image, cv2.COLOR_BGR2RGB)
-
-            # TODO: plug Step 2 pipeline here or navigate to a processing/results page.
+            # Share with root
+            root = self.winfo_toplevel()
+            root.cv_image_bgr = self.cv_image
+            root.cv_image_rgb = cv2.cvtColor(self.cv_image, cv2.COLOR_BGR2RGB)
 
         except Exception as e:
             messagebox.showerror("Open Image Error", f"{e}")
