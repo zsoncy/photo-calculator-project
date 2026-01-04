@@ -31,6 +31,7 @@ class Open_Image_Page(CTkFrame):
         top.grid_columnconfigure(0, weight=0)
         top.grid_columnconfigure(1, weight=1)
         top.grid_columnconfigure(2, weight=0)
+        top.grid_columnconfigure(3, weight=0)
 
         open_btn = CTkButton(
             master=top, text="Open Image…",
@@ -54,6 +55,14 @@ class Open_Image_Page(CTkFrame):
         )
         back_btn.grid(row=0, column=2)
 
+        process_btn = CTkButton(
+            master=top, text="Go to processing",
+            fg_color="#4e1d58", hover_color="#370d40", text_color="#DDC3C3",
+            font=("Helvetica", 24), corner_radius=50,
+            command=lambda: root.slide_to_page("processing", direction="left")
+        )
+        process_btn.grid(row=0, column=3, padx=(12, 0))
+
         # ---- Preview area ----
         self.preview = CTkLabel(self, text="Preview will appear here", text_color="#370d40")
         self.preview.grid(row=1, column=0, sticky="nsew", padx=24, pady=(0, 24))
@@ -76,7 +85,6 @@ class Open_Image_Page(CTkFrame):
         )
         if not path:
             return
-
         try:
             img = self._cv_imread_unicode(path)
             if img is None:
@@ -105,9 +113,6 @@ class Open_Image_Page(CTkFrame):
     # ---- Unicode-safe OpenCV read ----
     @staticmethod
     def _cv_imread_unicode(path):
-        """
-        Robust loader for OpenCV that supports non-ASCII paths (Windows/macOS/Linux).
-        """
         try:
             data = np.fromfile(path, dtype=np.uint8)
             return cv2.imdecode(data, cv2.IMREAD_COLOR)  # BGR
