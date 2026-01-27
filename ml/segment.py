@@ -1,43 +1,59 @@
 import cv2
 import numpy as np
 
-def find_char_boxes(bw: np.ndarray):
-    # Invert for finding connected components: text -> 255
-    inv = 255 - bw
-    # Remove tiny blobs
-    se = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
-    clean = cv2.morphologyEx(inv, cv2.MORPH_OPEN, se)
 
-    # Connected components
-    n, labels, stats, _ = cv2.connectedComponentsWithStats(clean, connectivity=8)
+def find_char_boxes(bw: np.ndarray):
+
+    inv = 255 - bw
+
+    cleaned = inv
+
+    # connectivity=8 checks diagonal pixels too
+    n, labels, stats, _ = cv2.connectedComponentsWithStats(cleaned, connectivity=8)
+
     boxes = []
     H, W = bw.shape[:2]
+
+    # Loop through found components (skip i=0 because that is the background)
     for i in range(1, n):
         x, y, w, h, area = stats[i]
-        if area < 20:        # too small
-            continue
-        if h < 8 or w < 5:   # too thin
-            continue
-        if h > 0.9*H or w > 0.9*W:
-            continue
+
+        # Filtering
+        if area < 30: continue  # Too small
+        if w > 0.9 * W or h > 0.9 * H: continue  # Too big
+
         boxes.append((x, y, w, h))
 
-    # sort by row (y), then x
-    boxes.sort(key=lambda b: (b[1]//30, b[0]))
+    # SORTING
+    # Sort boxes based on the X-coordinate (Left -> Right)
+    boxes.sort(key=lambda b: b[0])
+
     return boxes
 
-def extract_28x28(bw: np.ndarray, box, pad=4):
+
+def extract_28x28(bw: np.ndarray, box, pad=0):
     x, y, w, h = box
-    roi = bw[y:y+h, x:x+w]
-    # make square canvas (white), paste centered
-    side = max(w, h) + 2*pad
-    canvas = np.full((side, side), 255, dtype=np.uint8)
-    x0 = (side - w)//2
-    y0 = (side - h)//2
-    canvas[y0:y0+h, x0:x0+w] = roi
-    # resize to 28x28
-    out = cv2.resize(canvas, (28,28), interpolation=cv2.INTER_AREA)
-    # invert for CNN if trained on digit white on black (optional)
-    # EMNIST typically uses white digit on black background; if your training used that:
-    # out = 255 - out
+
+    # Cut out the character
+    roi = bw[y:y + h, x:x + w]
+
+    # Resize
+    scale = 20.0 / max(w, h)
+    new_w = int(w * scale)
+    new_h = int(h * scale)
+
+    resized_roi = cv2.resize(roi, (new_w, new_h), interpolation=cv2.INTER_AREA)
+
+    # Center
+    canvas = np.full((28, 28), 255, dtype=np.uint8)  # White background
+
+    x_center = (28 - new_w) // 2
+    y_center = (28 - new_h) // 2
+
+    canvas[y_center:y_center + new_h, x_center:x_center + new_w] = resized_roi
+
+    # Invert (White Text on Black)
+    out = 255 - canvas
+    _, out = cv2.threshold(out, 127, 255, cv2.THRESH_BINARY)
+
     return out
