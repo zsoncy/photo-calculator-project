@@ -33,17 +33,16 @@ def main():
         ds_symbols = None
         symbol_class_names = []
 
-    # 2) Build unified label list
-    # For simplicity, here we assume full EMNIST label space (62) + your symbols appended.
-    # (Advanced: map only the subset you want.)
+    # Build unified label list
     label_map = {}
 
-    # EMNIST byclass classes = 62 (0..61). We keep them as-is for a first model.
-    # Append your symbols next.
-    for i in range(62):
-        label_map[i] = f"emnist_{i}"  # placeholder names
+    # EMNIST digits only has 10 classes (0-9)
+    # Map index 0 -> "0", index 1 -> "1", etc.
+    for i in range(10):
+        label_map[i] = str(i)
 
-    offset = 62
+    # Append own symbols next.
+    offset = 10
     for i, name in enumerate(symbol_class_names):
         label_map[offset + i] = name
 
@@ -78,8 +77,15 @@ def main():
         "ml/export/checkpoints/char_cnn.keras", save_best_only=True, monitor="val_accuracy", mode="max"
     )
     es = tf.keras.callbacks.EarlyStopping(patience=3, restore_best_weights=True, monitor="val_accuracy")
-    model.fit(ds_train, validation_data=ds_val, epochs=epochs, callbacks=[ckpt, es])
 
+    model.fit(
+        ds_train,
+        validation_data=ds_val,
+        epochs=10,
+        steps_per_epoch=500,
+        validation_steps=50,
+        callbacks=[ckpt, es]
+    )
     # 5) Export model & label map
     os.makedirs("ml/export/char_cnn", exist_ok=True)
     model.save("ml/export/char_cnn")
