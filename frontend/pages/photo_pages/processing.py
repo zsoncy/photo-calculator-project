@@ -70,7 +70,7 @@ class Processing_Page(CTkFrame):
             footer, text="SHOW GRAPH →",
             fg_color="#4e1d58", hover_color="#370d40", text_color="#DDC3C3",
             font=("Helvetica", 20, "bold"), height=50, corner_radius=50,
-            command=lambda: root.slide_to_page("photo_graph", direction="left")
+            command=lambda: self.run_graph_analysis(root)
         )
         self.btn_graph.grid(row=1, column=2, sticky="ew", padx=(12, 0))
 
@@ -95,6 +95,23 @@ class Processing_Page(CTkFrame):
             root.pages["answer"].update_data(orig, ans_list)
 
         root.slide_to_page("answer", direction="left")
+
+    def run_graph_analysis(self, root):
+
+        if not hasattr(root, "cv_pre_binary") or root.cv_pre_binary is None:
+            print("No image to process!")
+            return
+
+        from backend.photo_processing.graph_bridge import analyze_for_graph
+        orig, coeffs = analyze_for_graph(root.cv_pre_binary)
+
+        print(f"Graph Data: {orig} -> {coeffs}")
+
+        if "photo_graph" in root.pages:
+            root.pages["photo_graph"].update_data(orig, coeffs)
+
+        # Go to the page
+        root.slide_to_page("photo_graph", direction="left")
 
     def on_show(self, root):
         cv_rgb = getattr(root, "cv_image_rgb", None)
