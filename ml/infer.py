@@ -5,7 +5,11 @@ import tensorflow as tf
 _model = None
 _label_map = None
 
-def load_model(model_dir="ml/export/checkpoints/char_cnn.keras", label_map_path="ml/label_map.json"):
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, "export", "checkpoints", "char_cnn.keras")
+LABEL_PATH = os.path.join(BASE_DIR, "label_map.json")
+
+def load_model(model_dir = MODEL_PATH, label_map_path = LABEL_PATH):
     global _model, _label_map
     if _model is None:
         _model = tf.keras.models.load_model(model_dir)
