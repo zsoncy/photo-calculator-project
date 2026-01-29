@@ -11,7 +11,7 @@ BATCH_SIZE = 64
 EPOCHS = 15
 CLASS_NAMES = [
     "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-    "div", "eq", "lpar", "minus", "mul", "plus", "rpar"
+    "div", "eq", "lpar", "minus", "mul", "plus", "rpar", "x"
 ]
 
 
@@ -26,7 +26,7 @@ def load_local_images(root_dirs):
     all_paths = []
     all_labels = []
 
-    print(f"📂 Scanning local folders: {root_dirs}")
+    print(f"Scanning local folders: {root_dirs}")
 
     for root in root_dirs:
         if not os.path.exists(root):
@@ -57,7 +57,6 @@ def load_local_images(root_dirs):
 
 def preprocess_image(path, label):
     img = tf.io.read_file(path)
-    # Force 1 channel (Grayscale)
     img = tf.image.decode_image(img, channels=1, expand_animations=False)
     img.set_shape([None, None, 1])
     img = tf.image.resize(img, [28, 28])
@@ -67,7 +66,7 @@ def preprocess_image(path, label):
 
 
 def load_emnist():
-    print("📥 Loading EMNIST Digits...")
+    print("Loading EMNIST Digits...")
     ds, info = tfds.load("emnist/digits", split="train", with_info=True, as_supervised=True)
 
     def prep_emnist(img, label):
@@ -84,12 +83,12 @@ def load_emnist():
 
 
 def main():
-    # 1. LOAD LOCAL DATA
+    # LOAD LOCAL DATA
     local_dirs = ["data/custom_data", "data/symbols"]
     paths, labels = load_local_images(local_dirs)
 
     if len(paths) == 0:
-        print("❌ Error: No local images found!")
+        print("Error: No local images found!")
         return
 
     # Convert to numpy for safety
@@ -98,32 +97,30 @@ def main():
     ds_local = tf.data.Dataset.from_tensor_slices((paths, labels))
     ds_local = ds_local.map(preprocess_image, num_parallel_calls=tf.data.AUTOTUNE)
 
-    # 2. LOAD EMNIST
+    # LOAD EMNIST
     ds_emnist = load_emnist()
 
-    # 3. OVER-WEIGHT YOUR DATA
-    # 50% chance to see YOUR handwriting, 50% chance to see EMNIST
+    # OVER-WEIGHT OWN DATA
     ds_local = ds_local.shuffle(5000).repeat(100)
 
-    # 4. MERGE
-    print("🔗 Merging datasets...")
+    # MERGE
+    print("Merging datasets...")
     ds_train = ds_emnist.concatenate(ds_local)
     ds_train = ds_train.shuffle(50000).batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
 
-    # 5. BUILD & TRAIN
-    print(f"🧠 Building Model for {len(CLASS_NAMES)} classes...")
+    # BUILD & TRAIN
+    print(f"Building Model for {len(CLASS_NAMES)} classes...")
     model = build_cnn(num_classes=len(CLASS_NAMES))
 
-    # Train!
     model.fit(ds_train, epochs=EPOCHS, steps_per_epoch=1000)
 
-    # 6. SAVE
+    # SAVE
     output_dir = "ml/export/checkpoints"
     os.makedirs(output_dir, exist_ok=True)
 
     model_path = os.path.join(output_dir, "char_cnn.keras")
     model.save(model_path)
-    print(f"✅ Model saved to {model_path}")
+    print(f"Model saved to {model_path}")
 
     label_map = {i: name for i, name in enumerate(CLASS_NAMES)}
     with open("ml/label_map.json", "w") as f:
