@@ -29,7 +29,7 @@ class Select_Calc_Page(CTkFrame):
 
         button_3 = CTkButton(master=container, text="Function graph", fg_color="#4e1d58", hover_color="#370d40",
                              text_color="#DDC3C3", font=("Helvetica", 40, "bold"),width=400,
-                             height=100, corner_radius=25)
+                             height=100, corner_radius=25, command=lambda: root.slide_to_page("graph", direction="left"))
         button_3.grid(row=0, column=3, padx=30)
 
         bottom = CTkFrame(self, fg_color="transparent")
