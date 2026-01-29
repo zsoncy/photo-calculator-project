@@ -1,98 +1,98 @@
 import cv2
 import numpy as np
-from sympy import sympify, Symbol, solve, Eq, simplify, Poly
+import re
+from sympy import sympify, Symbol, simplify, Poly, solve, Eq
 from ml import segment, infer
 
-# Map model class names to real math symbols
+# Mapping
 MATH_MAP = {
-    "plus": "+",
-    "minus": "-",
-    "mul": "*",
-    "div": "/",
-    "eq": "=",
-    "lpar": "(",
-    "rpar": ")",
-    "x": "x"
+    "plus": "+", "minus": "-", "mul": "*", "div": "/",
+    "eq": "=", "lpar": "(", "rpar": ")", "x": "x", "X": "x"
 }
 
 
-def get_brain_output(binary_img):
+def analyze_image(binary_image):
     """
-    1. Cuts characters from the binary image.
-    2. Predicts them using the model.
-    3. Converts to a string (e.g., "3x+5=10").
-    4. Parses that string into a list format for Answer_Page.
+    1. Applies 'Nuclear Glue' (Dilation) to merge broken symbols (x, =, +).
+    2. Uses those merged blobs to find bounding boxes.
+    3. Cuts the characters from the original sharp image.
+    4. Runs Model + Math Logic.
     """
 
-    # SEGMENTATION
-    boxes = segment.find_char_boxes(binary_img)
+    # 1. DILATION
+    if binary_image is None:
+        return ["Error: No Image"]
+
+    # Inverting
+    bw_inv = 255 - binary_image
+
+    # Expand text by ~20 pixels to merge split strokes
+    kernel = np.ones((5, 5), np.uint8)
+    bw_fat = cv2.dilate(bw_inv, kernel, iterations=4)
+
+    # Invert back for segment.py
+    bw_fat_inv = 255 - bw_fat
+
+    # 2. SEGMENTATION
+    boxes = segment.find_char_boxes(bw_fat_inv)
+
     if not boxes:
-        return ["Error"]
+        return ["Error: Empty"]
 
-    # CUTTING IT OUT
+    # 3. EXTRACTION
+    # extract from the ORIGINAL sharp binary_image, given the location from the dilated one.
     batch_images = []
     for box in boxes:
-        char_img = segment.extract_28x28(binary_img, box)
+        char_img = segment.extract_28x28(binary_image, box)
         batch_images.append(char_img)
 
-    # INFERENCE
+    # 4. MODEL + MATH
+    # PREDICTION
     predictions = infer.predict_batch(batch_images)
 
-    # TO STRING
-    raw_equation = ""
+    # BUILD STRING
+    raw_eq = ""
     for p in predictions:
         token = MATH_MAP.get(p, p)
-        raw_equation += token
+        raw_eq += token
 
-    print(f"Raw output: {raw_equation}")
+    print(f"Model natural Output: {raw_eq}")
 
-    # CONVERSION TO LIST
-    return parse_to_list(raw_equation)
+    # HEALER
+    clean_eq = raw_eq.replace("---", "=").replace("--", "=")
+    clean_eq = re.sub(r"x(\d)", r"x^\1", clean_eq)
+
+    print(f"Final processed equation: {clean_eq}")
+
+    # 7. PARSE TO LIST
+    return parse_equation_to_list(clean_eq)
 
 
-def parse_to_list(eq_str):
-    """
-    Converts raw string like "15x+9-3x=-2" into ["12", "11"]
-    """
+def parse_equation_to_list(eq_str):
     try:
         eq_str = eq_str.lower().replace(" ", "")
 
-        # Case 1: Simple Expression
-        if "=" not in eq_str and "x" not in eq_str:
+        # Simple Expression
+        if "x" not in eq_str and "=" not in eq_str:
             return [eq_str]
 
-        # SymPy
+        # SymPy - Algebra
         x = Symbol('x')
-
         if "=" in eq_str:
-            lhs_str, rhs_str = eq_str.split("=")
+            left_str, right_str = eq_str.split("=")
         else:
-            lhs_str, rhs_str = eq_str, "0"
+            left_str, right_str = eq_str, "0"
 
-        lhs = sympify(lhs_str)
-        rhs = sympify(rhs_str)
-        expr = simplify(lhs - rhs)
+        left_str = sympify(left_str)
+        right_str = sympify(right_str)
+        expression = simplify(left_str - right_str)
 
-        # Check if it's a polynomial in X
-        poly = Poly(expr, x)
-        degree = poly.degree()
-        coeffs = poly.all_coeffs()  # Returns [a, b, c] highest to lowest
+        poly = Poly(expression, x)
+        # LIST OF SYMPY NUMBERS: for ex:  [Integer(3), Integer(-9), Integer(1)]
+        coeffs = poly.all_coeffs()
 
-        # Convert coeffs to integer strings
-        coeffs_str = [str(int(c)) for c in coeffs]
-
-        # Case 2: Linear (Degree 1) -> Returns [a, b]
-        if degree == 1:
-            return coeffs_str  # [slope, intercept]
-
-        # Case 3: Quadratic (Degree 2) -> Returns [a, b, c]
-        elif degree == 2:
-            return coeffs_str  # [a, b, c]
-
-        # Case 4: Constant or higher order?
-        else:
-            return [str(expr)]
+        return [str(int(c)) for c in coeffs]
 
     except Exception as e:
-        print(f"Parsing Error: {e}")
+        print(f"Parsing Failed: {e}")
         return [eq_str]
