@@ -1,11 +1,8 @@
 import cv2
 import numpy as np
 
-
 def find_char_boxes(bw: np.ndarray):
-
     inv = 255 - bw
-
     cleaned = inv
 
     # connectivity=8 checks diagonal pixels too

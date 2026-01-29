@@ -2,113 +2,135 @@ import cv2
 import numpy as np
 import os
 import sys
-from sympy import sympify, Symbol, solve, simplify, Eq
+import re
+from sympy import sympify, Symbol, simplify, Poly, solve, Eq
 from ml import segment, infer
 
-# Mapping (Ensure your 'x' folder name matches the key here)
+# Mapping
 MATH_MAP = {
-    "plus": "+",
-    "minus": "-",
-    "mul": "*",
-    "div": "/",
-    "eq": "=",
-    "lpar": "(",
-    "rpar": ")",
-    "x": "x",
-    "X": "x"
+    "plus": "+", "minus": "-", "mul": "*", "div": "/",
+    "eq": "=", "lpar": "(", "rpar": ")", "x": "x", "X": "x"
 }
 
 
 def solve_image(image_path):
-    print(f"\nOpening image: {image_path}")
+    print(f"\n📸 Opening image: {image_path}")
 
     if not os.path.exists(image_path):
-        print("Error: File not found.")
+        print("❌ Error: File not found.")
         return
 
-    # 1. READ & PREPROCESS
+    # 1. PREPROCESSING
     img = cv2.imread(image_path)
-
-    # Resize to standard height (matches your App logic)
     h, w = img.shape[:2]
+
     target_h = 1000
     scale = target_h / h
     img = cv2.resize(img, (int(w * scale), target_h))
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+
     bw = cv2.adaptiveThreshold(
         blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 41, 15
     )
 
-    # Clean noise
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-    bw = cv2.morphologyEx(bw, cv2.MORPH_OPEN, kernel)
+    # Invert so text is White, Background is Black (Critical for dilation)
+    # AdaptiveThreshold usually gives black text on white bg, so we invert it.
+    bw_inv = 255 - bw
 
-    # 2. SEGMENTATION
-    boxes = segment.find_char_boxes(bw)
-    print(f"Found {len(boxes)} symbol(s).")
+    # --- 2. NUCLEAR GLUE (Pure Dilation) ---
+    # This blindly adds pixels to connect everything.
+    # 5x5 kernel, 4 iterations = expands everything by ~20 pixels
+    kernel = np.ones((5, 5), np.uint8)
+    bw_fat = cv2.dilate(bw_inv, kernel, iterations=4)
+
+    # Invert back to Black-Text-on-White so segment.py is happy
+    # (Your segment.py expects white background)
+    bw_fat_inv = 255 - bw_fat
+    # ----------------------------------------
+
+    # 3. SEGMENTATION
+    # Use the FAT image to find boxes
+    boxes = segment.find_char_boxes(bw_fat_inv)
+
+    print(f"🔎 Found {len(boxes)} symbol(s).")
 
     if len(boxes) == 0:
-        print("No characters found.")
+        print("❌ No characters found.")
         return
 
-    # 3. EXTRACTION
+    # --- DEBUG: RED BOX VISUALIZER ---
+    debug_img = img.copy()
+    for box in boxes:
+        x, y, w, h = box
+        cv2.rectangle(debug_img, (x, y), (x + w, y + h), (0, 0, 255), 3)
+
+    cv2.imwrite("debug_red_boxes.png", debug_img)
+    print("✅ Saved 'debug_red_boxes.png'")
+    # ---------------------------------
+
+    # 4. EXTRACTION & INFERENCE
     batch_images = []
-    for i, box in enumerate(boxes):
-        char_img = segment.extract_28x28(bw, box)
+
+    # IMPORTANT: We use the *Original Clean* BW image for extraction
+    # so the AI sees sharp characters, not the fat blobs.
+    # We just use the boxes found from the fat blobs.
+    bw_clean_for_ai = bw  # This is the original adaptive threshold result
+
+    for box in boxes:
+        char_img = segment.extract_28x28(bw_clean_for_ai, box)
         batch_images.append(char_img)
-        # Optional: Save debug images
-        # cv2.imwrite(f"debug_char_{i}.png", char_img)
 
-    # 4. INFERENCE
     predictions = infer.predict_batch(batch_images)
-    print(f"Raw Classes: {predictions}")
+    print(f"🧠 Raw Classes: {predictions}")
 
-    # 5. STRING CONSTRUCTION
-    equation_str = ""
+    # 5. BUILD STRING
+    raw_eq = ""
     for p in predictions:
         token = MATH_MAP.get(p, p)
-        equation_str += token
+        raw_eq += token
 
-    print(f"Equation: {equation_str}")
-    print("-" * 30)
+    print(f"📝 Raw Equation: {raw_eq}")
 
-    # 6. SOLVER (Algebra Support)
+    # 6. HEALER
+    clean_eq = raw_eq.replace("---", "=").replace("--", "=")
+    clean_eq = re.sub(r"x(\d)", r"x^\1", clean_eq)
+
+    print(f"✨ Healed Equation: {clean_eq}")
+
+    # 7. SOLVER
     try:
-        # Case A: Simple Math (2+2)
-        if "x" not in equation_str and "=" not in equation_str:
-            result = eval(equation_str)
-            print(f"RESULT: {result}")
+        eq_str = clean_eq.lower().replace(" ", "")
+        if "x" not in eq_str and "=" not in eq_str:
+            print(f"✅ Result: {eval(eq_str)}")
             return
 
-        # Case B: Algebra (3x + 5 = 10)
         x = Symbol('x')
-
-        # Split into Left and Right sides
-        if "=" in equation_str:
-            lhs_str, rhs_str = equation_str.split("=")
+        if "=" in eq_str:
+            lhs_str, rhs_str = eq_str.split("=")
         else:
-            lhs_str, rhs_str = equation_str, "0"
+            lhs_str, rhs_str = eq_str, "0"
 
-        # Sympy Solve
         lhs = sympify(lhs_str)
         rhs = sympify(rhs_str)
-        equation = Eq(lhs, rhs)
+        expression = simplify(lhs - rhs)
 
-        solution = solve(equation, x)
+        poly = Poly(expression, x)
+        coeffs = poly.all_coeffs()
+        print(f"📊 Coefficients: {[str(int(c)) for c in coeffs]}")
 
-        print(f"ALGEBRA SOLUTION: x = {solution}")
+        solution = solve(expression, x)
+        print(f"🚀 Solution: x = {solution}")
 
     except Exception as e:
-        print(f"Could not solve: {e}")
-        print("(Did you detect a symbol incorrectly?)")
+        print(f"⚠️ Math Error: {e}")
 
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         target_file = sys.argv[1]
     else:
-        target_file = "test_image.png"
+        target_file = "test_image_7.png"
 
     solve_image(target_file)
