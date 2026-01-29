@@ -57,7 +57,7 @@ class Open_Image_Page(CTkFrame):
 
         # ---------- 3. Footer Buttons ----------
         footer = CTkFrame(self, fg_color="transparent")
-        footer.grid(row=2, column=0, sticky="ew", padx=24, pady=(0, 24))
+        footer.grid(row=2, column=0, sticky="ew", padx=24, pady=(50, 50))
         footer.grid_columnconfigure(0, weight=1)  # Left side
         footer.grid_columnconfigure(1, weight=0)  # Space
         footer.grid_columnconfigure(2, weight=1)  # Right side

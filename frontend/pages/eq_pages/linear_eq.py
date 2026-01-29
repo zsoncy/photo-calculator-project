@@ -56,7 +56,7 @@ class Linear_Eq_Page(CTkFrame):
         button_calc.grid(row=1, column=3, sticky="ew", padx=(10,110),  ipadx=50, ipady=5)
 
         bottom = CTkFrame(self, fg_color="transparent")
-        bottom.grid(row=2, column=0, columnspan=4, sticky="e", padx=(0, 100), pady=(0,30))
+        bottom.grid(row=2, column=0, columnspan=4, sticky="es", padx=(0, 100), pady=(0, 50))
 
         button_back = CTkButton(master=bottom, text="BACK", fg_color="#4e1d58", hover_color="#370d40",
                              text_color="#DDC3C3", font=("Helvetica", 24, "bold"), height=60, corner_radius=50,

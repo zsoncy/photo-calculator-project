@@ -33,7 +33,7 @@ class Select_Calc_Page(CTkFrame):
         button_3.grid(row=0, column=3, padx=30)
 
         bottom = CTkFrame(self, fg_color="transparent")
-        bottom.grid(row=2, column=0, columnspan=3, sticky="e", padx=50)
+        bottom.grid(row=2, column=0, columnspan=3, sticky="es", padx=50, pady=(0, 50))
 
         button_back = CTkButton(master=bottom, text="BACK", fg_color="#4e1d58", hover_color="#370d40",
                              text_color="#DDC3C3", font=("Helvetica", 24, "bold"), height=60, corner_radius=50,

@@ -44,7 +44,7 @@ class Processing_Page(CTkFrame):
 
         # ---------- 2. Footer Buttons (Minimal) ----------
         footer = CTkFrame(self, fg_color="transparent")
-        footer.grid(row=1, column=0, sticky="ew", padx=24, pady=(0, 24))
+        footer.grid(row=1, column=0, sticky="ew", padx=24, pady=(0, 50))
         footer.grid_columnconfigure(0, weight=1)
         footer.grid_columnconfigure(1, weight=0)
         footer.grid_columnconfigure(2, weight=1)
