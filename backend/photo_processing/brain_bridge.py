@@ -61,11 +61,12 @@ def analyze_image(binary_image):
     # HEALER
     clean_eq = raw_eq.replace("---", "=").replace("--", "=")
     clean_eq = re.sub(r"x(\d)", r"x^\1", clean_eq)
+    clean_eq = re.sub(r"(\d)x", r"\1*x", clean_eq)
 
     print(f"Final processed equation: {clean_eq}")
 
     # 7. PARSE TO LIST
-    return parse_equation_to_list(clean_eq)
+    return clean_eq, parse_equation_to_list(clean_eq)
 
 
 def parse_equation_to_list(eq_str):

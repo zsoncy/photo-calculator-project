@@ -32,6 +32,7 @@ class App(CTk):
         self.current_page = None
 
         ans=""
+        orig=""
 
         # --- Create and register all pages ---
         self.pages["main"] = Main_Page(self)
@@ -43,7 +44,7 @@ class App(CTk):
         self.pages["operation"] = Operation_Page(self)
         self.pages["open_image"] = Open_Image_Page(self)
         self.pages["processing"] = Processing_Page(self)
-        self.pages["answer"] = Answer_Page(self, ans)
+        self.pages["answer"] = Answer_Page(self, orig, ans)
         self.pages["photo_graph"] = Photo_Graph_Page(self, ans)
 
 
