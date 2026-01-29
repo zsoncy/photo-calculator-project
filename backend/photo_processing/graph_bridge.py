@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import re
-from sympy import sympify, Symbol, Poly
+from sympy import sympify, Symbol, Poly, simplify
 from ml import segment, infer
 
 # Mapping
@@ -45,27 +45,30 @@ def analyze_for_graph(binary_image):
     clean_eq = re.sub(r"x(\d)", r"x^\1", clean_eq)  # x2 -> x^2
     clean_eq = re.sub(r"(\d)x", r"\1*x", clean_eq)  # 3x -> 3*x
 
-    # EXTRACT COEFFICIENTS
     try:
         # Convert to lower case
         eq_str = clean_eq.lower().replace(" ", "")
 
-        if "=" in eq_str:
-            parts = eq_str.split("=")
-            eq_str = max(parts, key=len)
-
         x = Symbol('x')
-        expr = sympify(eq_str)
+        if "=" in eq_str:
+            left_str, right_str = eq_str.split("=")
+        else:
+            left_str, right_str = eq_str, "0"
+
+        left_str = sympify(left_str)
+        right_str = sympify(right_str)
+        expression = simplify(left_str - right_str)
 
         # Get polynomial coefficients (highest power first)
-        # 3*x^2 + 1 -> [3, 0, 1]
-        poly = Poly(expr, x)
+        poly = Poly(expression, x)
         coeffs = poly.all_coeffs()
 
         # Convert to strings
         coeffs_str = [str(int(c)) for c in coeffs]
 
-        return clean_eq, coeffs_str
+        pretty_eq = str(expression).replace("**", "^").replace("*", "")
+
+        return pretty_eq, coeffs_str
 
     except Exception as e:
         print(f"Graph Parse Error: {e}")
