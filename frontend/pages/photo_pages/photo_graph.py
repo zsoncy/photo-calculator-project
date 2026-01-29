@@ -4,27 +4,28 @@ from customtkinter import *
 
 
 class Photo_Graph_Page(CTkFrame):
-    def __init__(self, root, ans):
+    def __init__(self, root, orig, ans):
         super().__init__(root)
 
-        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=1)
-        self.grid_rowconfigure(2, weight=1)
+        self.grid_rowconfigure(2, weight=0)
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
 
         self.ans=ans
+        self.orig = orig
 
         self.configure(fg_color="#DDC3C3")
         self.title = "Photo Calculator"
 
+        self.lbl_title = CTkLabel(self, text="Graph Viewer",
+                                  font=("Helvetica", 32, "bold"), text_color="#4e1d58")
+        self.lbl_title.grid(row=0, column=0, pady=(20, 10))
 
-
-        def function_solve():
-            return
-
-
-
+        self.graph_frame = CTkFrame(self, fg_color="white", corner_radius=20)
+        self.graph_frame.grid(row=1, column=0, sticky="nsew", padx=40, pady=20)
+        # grid it in the update_graph()
 
         bottom = CTkFrame(self, fg_color="transparent")
         bottom.grid(row=2, column=0, columnspan=2, sticky="es", padx=(0, 100), pady=(0, 50))
