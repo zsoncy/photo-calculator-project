@@ -10,6 +10,7 @@ class Processing_Page(CTkFrame):
         self.configure(fg_color="#DDC3C3")
         self.title = "Photo Calculator - Processing"
 
+
         # Simple Layout: Viewers take up almost all space, Buttons at bottom
         self.grid_rowconfigure(0, weight=1)  # Viewers area
         self.grid_rowconfigure(1, weight=0)  # Footer Buttons
@@ -61,7 +62,7 @@ class Processing_Page(CTkFrame):
             footer, text="SOLVE EQUATION →",
             fg_color="#4e1d58", hover_color="#370d40", text_color="#DDC3C3",
             font=("Helvetica", 20, "bold"), height=50, corner_radius=50,
-            command=lambda: root.slide_to_page("answer", direction="left")
+            command=lambda: self.run_analysis(root)
         )
         self.btn_calc.grid(row=0, column=2, sticky="ew", padx=(12, 0))
 
@@ -78,6 +79,22 @@ class Processing_Page(CTkFrame):
         self.img_right = None  # PIL.Image
         self.ctk_left = None
         self.ctk_right = None
+
+    def run_analysis(self, root):
+
+        if not hasattr(root, "cv_pre_binary") or root.cv_pre_binary is None:
+            print("No image to process!")
+            return
+
+        from backend.photo_processing.brain_bridge import analyze_image
+        orig, ans_list = analyze_image(root.cv_pre_binary)
+
+        print(f"Bridge Result: {ans_list}")
+
+        if "answer" in root.pages:
+            root.pages["answer"].update_data(orig, ans_list)
+
+        root.slide_to_page("answer", direction="left")
 
     def on_show(self, root):
         cv_rgb = getattr(root, "cv_image_rgb", None)
@@ -138,7 +155,7 @@ class Processing_Page(CTkFrame):
         h = max(1, target.winfo_height())
 
         img = pil_img.copy()
-        img.thumbnail((w, h), Image.LANCZOS)
+        img.thumbnail((w, h))
 
         ctk_img = CTkImage(light_image=img, dark_image=img, size=img.size)
 
