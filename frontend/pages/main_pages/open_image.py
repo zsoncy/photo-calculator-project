@@ -6,32 +6,35 @@ import numpy as np
 import cv2
 import os
 
+
 class Open_Image_Page(CTkFrame):
     def __init__(self, root):
         super().__init__(root)
 
-        # Layout & theme
-        self.grid_rowconfigure(0, weight=0)  # top bar
-        self.grid_rowconfigure(1, weight=1)  # preview
+        # Layout:
+        # Row 0: Top Bar (Open Button + Label)
+        # Row 1: Preview (Expands)
+        # Row 2: Footer (Back / Next Buttons)
+        self.grid_rowconfigure(0, weight=0)
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_rowconfigure(2, weight=0)
         self.grid_columnconfigure(0, weight=1)
+
         self.configure(fg_color="#DDC3C3")
         self.title = "Photo Calculator - Open Image"
 
         # ---- State ----
-        self.cv_image = None          # OpenCV image (BGR numpy array)
-        self.pil_image = None         # PIL Image (RGB)
-        self.ctk_image = None         # CTkImage for display
+        self.cv_image = None
+        self.pil_image = None
+        self.ctk_image = None
         cfg = load_config()
         self.last_dir = cfg.get("last_dir") or os.path.expanduser("~")
 
-
-        # ---- Top bar ----
+        # ---------- 1. Top Bar (Open File) ----------
         top = CTkFrame(self, fg_color="transparent")
-        top.grid(row=0, column=0, sticky="new", padx=24, pady=(24, 12))
-        top.grid_columnconfigure(0, weight=0)
-        top.grid_columnconfigure(1, weight=1)
-        top.grid_columnconfigure(2, weight=0)
-        top.grid_columnconfigure(3, weight=0)
+        top.grid(row=0, column=0, sticky="ew", padx=24, pady=(24, 12))
+        top.grid_columnconfigure(0, weight=1)  # Button
+        top.grid_columnconfigure(1, weight=1)  # Label space
 
         open_btn = CTkButton(
             master=top, text="Open Image…",
@@ -47,40 +50,42 @@ class Open_Image_Page(CTkFrame):
         )
         self.path_label.grid(row=0, column=1, sticky="ew")
 
-        back_btn = CTkButton(
-            master=top, text="BACK",
-            fg_color="#4e1d58", hover_color="#370d40", text_color="#DDC3C3",
-            font=("Helvetica", 24), corner_radius=50,
-            command=lambda: root.slide_to_page("main", direction="right")
-        )
-        back_btn.grid(row=0, column=2)
-
-        process_btn = CTkButton(
-            master=top, text="Go to processing",
-            fg_color="#4e1d58", hover_color="#370d40", text_color="#DDC3C3",
-            font=("Helvetica", 24), corner_radius=50,
-            command=lambda: root.slide_to_page("processing", direction="left")
-        )
-        process_btn.grid(row=0, column=3, padx=(12, 0))
-
-        # ---- Preview area ----
+        # ---------- 2. Preview Area ----------
         self.preview = CTkLabel(self, text="Preview will appear here", text_color="#370d40")
-        self.preview.grid(row=1, column=0, sticky="nsew", padx=24, pady=(0, 24))
+        self.preview.grid(row=1, column=0, sticky="nsew", padx=24, pady=(0, 12))
         self.preview.bind("<Configure>", self._redraw_preview)
 
-    # ---- Standard OS file dialog ----
+        # ---------- 3. Footer Buttons ----------
+        footer = CTkFrame(self, fg_color="transparent")
+        footer.grid(row=2, column=0, sticky="ew", padx=24, pady=(0, 24))
+        footer.grid_columnconfigure(0, weight=1)  # Left side
+        footer.grid_columnconfigure(1, weight=0)  # Space
+        footer.grid_columnconfigure(2, weight=1)  # Right side
+
+        back_btn = CTkButton(
+            master=footer, text="BACK",
+            fg_color="#4e1d58", hover_color="#370d40", text_color="#DDC3C3",
+            font=("Helvetica", 24, "bold"), height=60, corner_radius=50,
+            command=lambda: root.slide_to_page("main", direction="right")
+        )
+        back_btn.grid(row=0, column=0, sticky="w", padx=(0, 20))
+
+        process_btn = CTkButton(
+            master=footer, text="GO TO PROCESSING →",
+            fg_color="#4e1d58", hover_color="#370d40", text_color="#DDC3C3",
+            font=("Helvetica", 24, "bold"), height=60, corner_radius=50,
+            command=lambda: root.slide_to_page("processing", direction="left")
+        )
+        process_btn.grid(row=0, column=2, sticky="e", padx=(20, 0))
+
     def open_image_dialog(self):
         filetypes = [
             ("Image files", "*.png;*.jpg;*.jpeg;*.bmp;*.tiff;*.tif"),
-            ("PNG", "*.png"),
-            ("JPEG", "*.jpg;*.jpeg"),
-            ("Bitmap", "*.bmp"),
-            ("TIFF", "*.tiff;*.tif"),
             ("All files", "*.*"),
         ]
         path = filedialog.askopenfilename(
             title="Open Image",
-            initialdir=self.last_dir,  # loaded from config in __init__
+            initialdir=self.last_dir,
             filetypes=filetypes
         )
         if not path:
@@ -88,17 +93,17 @@ class Open_Image_Page(CTkFrame):
         try:
             img = self._cv_imread_unicode(path)
             if img is None:
-                raise ValueError("Could not read image (unsupported or corrupt).")
+                raise ValueError("Could not read image.")
 
             # Save state
             self.cv_image = img
             self.pil_image = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
 
-            # Update + persist last_dir so it's remembered next run
+            # Update config
             self.last_dir = os.path.dirname(path)
             save_config({"last_dir": self.last_dir})
 
-            # UI + preview
+            # Update UI
             self.path_label.configure(text=path)
             self._update_preview()
 
@@ -110,16 +115,14 @@ class Open_Image_Page(CTkFrame):
         except Exception as e:
             messagebox.showerror("Open Image Error", f"{e}")
 
-    # ---- Unicode-safe OpenCV read ----
     @staticmethod
     def _cv_imread_unicode(path):
         try:
             data = np.fromfile(path, dtype=np.uint8)
-            return cv2.imdecode(data, cv2.IMREAD_COLOR)  # BGR
+            return cv2.imdecode(data, cv2.IMREAD_COLOR)
         except Exception:
             return None
 
-    # ---- Preview rendering with aspect ratio ----
     def _update_preview(self):
         if self.pil_image is None:
             return
@@ -127,9 +130,8 @@ class Open_Image_Page(CTkFrame):
         h = max(1, self.preview.winfo_height())
 
         img = self.pil_image.copy()
-        img.thumbnail((w, h), Image.LANCZOS)
+        img.thumbnail((w, h))
 
-        # CTkImage for high-DPI + theme support; keep a reference!
         self.ctk_image = CTkImage(light_image=img, dark_image=img, size=img.size)
         self.preview.configure(image=self.ctk_image, text="")
 

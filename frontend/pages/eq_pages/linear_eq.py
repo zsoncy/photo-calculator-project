@@ -59,14 +59,14 @@ class Linear_Eq_Page(CTkFrame):
         bottom.grid(row=2, column=0, columnspan=4, sticky="e", padx=(0, 100), pady=(0,30))
 
         button_back = CTkButton(master=bottom, text="BACK", fg_color="#4e1d58", hover_color="#370d40",
-                             text_color="#DDC3C3", font=("Helvetica", 40), corner_radius=50,
+                             text_color="#DDC3C3", font=("Helvetica", 24, "bold"), height=60, corner_radius=50,
                              command=lambda: root.slide_to_page("select_eq", direction="right"))
-        button_back.grid(row=0, column=0, sticky="e", padx=(10, 0), ipady=20, ipadx=20)
+        button_back.grid(row=0, column=0, sticky="w",  padx=(0, 20))
 
         button_home = CTkButton(master=bottom, text="HOME", fg_color="#4e1d58", hover_color="#370d40",
-                             text_color="#DDC3C3", font=("Helvetica", 40), corner_radius=50,
+                             text_color="#DDC3C3", font=("Helvetica", 24, "bold"), height=60, corner_radius=50,
                              command=lambda: root.slide_to_page("main", direction="right"))
-        button_home.grid(row=0, column=1, sticky="e", padx=(10, 0), ipady=20, ipadx=20)
+        button_home.grid(row=0, column=1, sticky="w",  padx=(0, 20))
 
         """Button hover effect, for it to change the font color as well"""
         button_calc.bind("<Enter>", lambda event: button_calc.configure(fg_color="#4e1d58", text_color="#6D8EA0"))
