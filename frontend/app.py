@@ -10,11 +10,15 @@ from frontend.pages.main_pages.select_calc import Select_Calc_Page
 from frontend.pages.op_pages.operation import Operation_Page
 from frontend.pages.main_pages.open_image import Open_Image_Page
 from frontend.pages.photo_pages.processing import Processing_Page
+from frontend.pages.func_graph.graph import Graph_Page
+from frontend.pages.photo_pages.answer import Answer_Page
+from frontend.pages.photo_pages.photo_graph import Photo_Graph_Page
 
 
 class App(CTk):
     def __init__(self):
         super().__init__(fg_color="#DDC3C3")
+        super().title("Photo Calculator")
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.title = "Photo Calculator"
@@ -27,15 +31,20 @@ class App(CTk):
         self.pages = {}
         self.current_page = None
 
+        ans=""
+
         # --- Create and register all pages ---
         self.pages["main"] = Main_Page(self)
         self.pages["select_calc"] = Select_Calc_Page(self)
         self.pages["select_eq"] = Select_Eq_Page(self)
         self.pages["linear"] = Linear_Eq_Page(self)
         self.pages["quadratic"] = Quadratic_Eq_Page(self)
+        self.pages["graph"] = Graph_Page(self)
         self.pages["operation"] = Operation_Page(self)
         self.pages["open_image"] = Open_Image_Page(self)
         self.pages["processing"] = Processing_Page(self)
+        self.pages["answer"] = Answer_Page(self, ans)
+        self.pages["photo_graph"] = Photo_Graph_Page(self, ans)
 
 
 
