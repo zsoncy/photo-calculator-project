@@ -146,7 +146,7 @@ class Processing_Page(CTkFrame):
             blurred, 255,
             cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
             cv2.THRESH_BINARY,
-            41, 15
+            91, 2
         )
 
         # 4. Morphological Open (Clean noise)

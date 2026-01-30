@@ -59,7 +59,7 @@ def analyze_image(binary_image):
     print(f"Model natural Output: {raw_eq}")
 
     # HEALER
-    clean_eq = raw_eq.replace("---", "=").replace("--", "=")
+    clean_eq = raw_eq.replace("--", "=")
     clean_eq = re.sub(r"x(\d)", r"x^\1", clean_eq)
     clean_eq = re.sub(r"(\d)x", r"\1*x", clean_eq)
 
