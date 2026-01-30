@@ -98,7 +98,7 @@ def main():
     ds_local = ds_local.shuffle(5000).repeat(100)
 
     # MERGE
-    print("🔗 Merging datasets...")
+    print("Merging datasets...")
     ds_train = ds_emnist.concatenate(ds_local)
     ds_train = ds_train.shuffle(50000).batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
 

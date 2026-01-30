@@ -8,7 +8,6 @@ from ml.data_symbols import load_symbols_from_folders
 def visualize_training_data():
     print("Visualizing what the machine sees...")
 
-    # Loading own symbols using the EXACT same logic as training
     ds, class_names = load_symbols_from_folders("data/symbols", (28, 28), batch_size=32)
 
     # Grab one batch of images
@@ -50,7 +49,7 @@ def visualize_training_data():
         # Combine all rows
         final_grid = np.vstack(rows[:4])  # Limit to 4 rows
 
-        filename = "debug_what_ai_sees.png"
+        filename = "debug_what_model_sees.png"
         cv2.imwrite(filename, final_grid)
         print(f"Saved snapshot to: {os.path.abspath(filename)}")
 

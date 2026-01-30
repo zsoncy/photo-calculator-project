@@ -5,14 +5,14 @@ import numpy as np
 
 
 def main():
-    print("📥 Loading 5 random EMNIST samples...")
+    print("Loading 5 random EMNIST samples...")
     ds = tfds.load("emnist/digits", split="train", as_supervised=True)
-    ds = ds.take(5)  # Just take 5 examples
+    ds = ds.take(5)  # 5 examples
 
-    # We will create 4 strips of images to test different fixes
+    #  4 strips of images to test different fixes
     strip_1, strip_2, strip_3, strip_4 = [], [], [], []
 
-    print("🔄 Generating variations...")
+    print("Generating variations...")
 
     for i, (img_tensor, label) in enumerate(ds):
         # Base conversion
@@ -57,7 +57,7 @@ def main():
     ])
 
     cv2.imwrite("debug_calibration.png", final_img)
-    print("✅ Generated 'debug_calibration.png'. Open it and see which row is readable!")
+    print("Generated 'debug_calibration.png'. Open it and see which row is readable!")
 
 
 if __name__ == "__main__":
