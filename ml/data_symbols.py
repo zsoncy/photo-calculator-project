@@ -1,7 +1,6 @@
 import tensorflow as tf
 import pathlib
 
-# data/symbols/<class_name>/*.png
 def load_symbols_from_folders(root="data/symbols", img_size=(28,28), batch_size=64):
     root = pathlib.Path(root)
     ds = tf.keras.preprocessing.image_dataset_from_directory(
@@ -9,9 +8,8 @@ def load_symbols_from_folders(root="data/symbols", img_size=(28,28), batch_size=
         image_size=img_size, batch_size=batch_size, shuffle=True
     )
 
-    class_names = ds.class_names  # folder order
+    class_names = ds.class_names
 
-    # Normalize & ensure (28,28,1)
     def prep(x, y):
         x = tf.cast(x, tf.float32) / 255.0
         y = tf.cast(y, tf.int64)

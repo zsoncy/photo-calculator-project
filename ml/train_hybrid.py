@@ -74,7 +74,7 @@ def load_emnist():
 
 def main():
 
-    checkpoints_dir = "ml/export/checkpoints"
+    checkpoints_dir = "export/checkpoints"
     if os.path.exists(checkpoints_dir):
         print("Deleting old corrupted brain...")
         shutil.rmtree(checkpoints_dir)
@@ -113,7 +113,7 @@ def main():
     print(f"Model saved to {checkpoints_dir}")
 
     label_map = {i: name for i, name in enumerate(CLASS_NAMES)}
-    with open("ml/label_map.json", "w") as f:
+    with open("label_map.json", "w") as f:
         json.dump(label_map, f, indent=2)
 
 if __name__ == "__main__":
