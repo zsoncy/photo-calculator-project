@@ -24,9 +24,9 @@ class Answer_Page(CTkFrame):
         self.configure(fg_color="#DDC3C3")
         self.title = "Photo Calculator"
 
-        self.label_original = CTkLabel(self, text=orig, height=120, width=100, font=("Helvetica", 80),
-                                corner_radius=50, text_color="#370d40", fg_color="#6D8EA0")
-        self.label_original.grid(row=1, column=0, columnspan=3, sticky="ew", padx=20, pady=(0, 15), ipadx=50, ipady=5)
+        self.lbl_title = CTkLabel(self, text="Equation Solved:",
+                                  font=("Helvetica", 100, "bold"), text_color="#4e1d58")
+        self.lbl_title.grid(row=1, column=0, columnspan=3, pady=(50, 10))
 
         self.label_result = CTkLabel(self, text="Calculating . . .", height=120, width=100, font=("Helvetica", 80),
                                 corner_radius=50, text_color="#370d40", fg_color="#6D8EA0")
@@ -122,6 +122,6 @@ class Answer_Page(CTkFrame):
             final_output = "Error"
 
         self.label_result.configure(text=final_output)
-        self.label_original.configure(text=self.orig)
+        self.lbl_title.configure(text=self.orig)
 
 

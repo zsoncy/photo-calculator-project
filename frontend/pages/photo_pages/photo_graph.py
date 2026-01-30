@@ -22,7 +22,7 @@ class Photo_Graph_Page(CTkFrame):
         self.title = "Photo Calculator"
 
         self.lbl_title = CTkLabel(self, text="Graph Viewer",
-                                  font=("Helvetica", 32, "bold"), text_color="#4e1d58")
+                                  font=("Helvetica", 50, "bold"), text_color="#4e1d58")
         self.lbl_title.grid(row=0, column=0, pady=(50, 10))
 
         self.graph_frame = CTkFrame(self, fg_color="white", corner_radius=20)
